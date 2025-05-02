@@ -11,6 +11,7 @@ pragma solidity ^0.8.7;
 
 import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
 import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+import {AutomationCompatibleInterface} from "@chainlink/contracts/src/v0.8/automation/AutomationCompatible.sol";
 
 /**
  * @title Raffle
@@ -18,7 +19,7 @@ import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/V
  * @notice This contract is a simple lottery contract that allows users to enter and win a prize.
  * @dev This contract uses Chainlink VRFv2.5 to generate a random winner.
  */
-contract Raffle is VRFConsumerBaseV2Plus {
+contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     // Errors
     error Raffle__NotEnoughEthEntered();
     error Raffle__TransferFailed();
@@ -87,7 +88,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
      * @return upkeepNeeded - true if the lottery is ready to be winner picked, false otherwise.
      * @return performData - ignore
      */
-    function checkUpkeep(bytes memory /* checkData */) public view returns (bool upkeepNeeded, bytes memory /* performData */) {
+    function checkUpkeep(bytes memory /* checkData */) public view override returns (bool upkeepNeeded, bytes memory /* performData */) {
         bool timeHasPassed = (block.timestamp - s_lastTimeStamp) >= i_interval;
         bool isOpen = s_raffleState == RaffleState.OPEN;
         bool hasPlayers = s_players.length > 0;
@@ -100,7 +101,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
      * @dev This is the function that is called by the Chainlink nodes will call to pick a winner.
      * @param - ignore
      */
-    function performUpkeep(bytes calldata /* performData */) external {
+    function performUpkeep(bytes calldata /* performData */) external override{
         (bool upkeepNeeded, ) = checkUpkeep("");
         if (!upkeepNeeded) {
             revert Raffle__UpkeepNotNeeded(address(this).balance, s_players.length, uint256(s_raffleState));
@@ -147,5 +148,37 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
     function getPlayer(uint256 index) public view returns (address) {
         return s_players[index];
+    }
+
+    function getRecentWinner() public view returns (address) {
+        return s_recentWinner;
+    }
+
+    function getRaffleState() public view returns (RaffleState) {
+        return s_raffleState;
+    }
+
+    function getInterval() public view returns (uint256) {
+        return i_interval;
+    }
+
+    function getNumberOfWords() public pure returns (uint256) {
+        return NUM_WORDS;
+    }
+
+    function getNumberOfPlayers() public view returns (uint256) {
+        return s_players.length;
+    }
+
+    function getLastTimeStamp() public view returns (uint256) {
+        return s_lastTimeStamp;
+    }
+
+    function getRequestConfirmations() public pure returns (uint16) {
+        return REQUEST_CONFIRMATIONS;
+    }
+
+    function getBalance() public view returns (uint256) {
+        return address(this).balance;
     }
 }
