@@ -23,7 +23,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     // Errors
     error Raffle__NotEnoughEthEntered();
     error Raffle__TransferFailed();
-    error Raffle__RaffleNotOpen();
+    error Raffle__NotOpen();
     error Raffle__UpkeepNotNeeded(uint256 balance, uint256 playersLength, uint256 raffleState);
     // Type Declarations
     enum RaffleState {
@@ -47,6 +47,8 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     // Events
     event RaffleEnter(address indexed player);
     event WinnerPicked(address indexed winner);
+
+    // Functions
     constructor(
         address vrfCoordinator,
         uint256 entranceFee,
@@ -67,7 +69,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
 
     function enterRaffle() public payable {
         if (s_raffleState != RaffleState.OPEN) {
-            revert Raffle__RaffleNotOpen();
+            revert Raffle__NotOpen();
         }
         if (msg.value < i_entranceFee) {
             revert Raffle__NotEnoughEthEntered();

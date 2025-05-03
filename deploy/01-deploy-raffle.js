@@ -1,6 +1,6 @@
 const {network, ethers} = require("hardhat");
 const {developmentChains, networkConfig} = require("../helper-hardhat-config");
-
+const {verify} = require("../utils/verify");
 const VRF_SUB_FUND_AMOUNT = ethers.utils.parseEther("12");
 
 module.exports = async ({getNamedAccounts, deployments}) => {
@@ -49,11 +49,11 @@ module.exports = async ({getNamedAccounts, deployments}) => {
         waitConfirmations: network.config.blockConfirmations || 1,
     });
 
-    // // Verify the contract
-    // if (!developmentChains.includes(chainName)) {
-    //     log("Verifying contract...");
-    //     await verify(raffle.address, args);
-    // }
+    // Verify the contract
+    if (!developmentChains.includes(chainName)) {
+        log("Verifying contract...");
+        await verify(raffle.address, args);
+    }
 }
 
 module.exports.tags = ["all", "raffle"];
